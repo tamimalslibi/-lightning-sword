@@ -52,9 +52,9 @@ public class LightningSwordFeature implements Listener, CommandExecutor {
     private final Random random = new Random();
 
     // --- Tunable numbers, adjust to taste ---
-    private static final double EXTRA_MELEE_DAMAGE = 5.0;     // flat bonus on top of normal sword + enchant damage
+    private static final double EXTRA_MELEE_DAMAGE = 2.5;     // flat bonus on top of normal sword + enchant damage
     private static final double ABILITY_RADIUS = 6.0;         // blocks around the player affected by the ability
-    private static final double ABILITY_DAMAGE = 14.0;         // 3.0 = 1.5 hearts of "a bit" of damage per bolt
+    private static final double ABILITY_DAMAGE = 12.0;         // 3.0 = 1.5 hearts of "a bit" of damage per bolt
     private static final long ABILITY_COOLDOWN_MS = 15_000;   // 15 second cooldown on the ability
 
     public LightningSwordFeature(JavaPlugin plugin) {
