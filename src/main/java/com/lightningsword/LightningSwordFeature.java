@@ -70,8 +70,8 @@ public class LightningSwordFeature implements Listener, CommandExecutor {
 
         meta.setDisplayName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Lightning Sword");
         meta.setLore(List.of(
-                ChatColor.White + "Strikes lightning upon hit.",
-                ChatColor.White + "Every few swings, the storm answers."
+                ChatColor.WHITE + "Strikes lightning upon hit.",
+                ChatColor.WHITE + "Every few swings, the storm answers."
         ));
 
         // NOTE: enchantment field names shown are for older Spigot/Paper APIs.
