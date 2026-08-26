@@ -1,0 +1,9 @@
+name: LightningSword
+version: '1.0.0'
+main: com.lightningsword.LightningSwordPlugin
+api-version: '1.20'
+commands:
+  lightningsword:
+    description: Gives you the Lightning Sword
+    usage: /lightningsword
+    aliases: [lsword]
