@@ -65,13 +65,13 @@ public class LightningSwordFeature implements Listener, CommandExecutor {
     // ---------- Item creation ----------
 
     public ItemStack createLightningSword() {
-        ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
+        ItemStack sword = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = sword.getItemMeta();
 
         meta.setDisplayName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Lightning Sword");
         meta.setLore(List.of(
-                ChatColor.GRAY + "Strikes lightning upon hit.",
-                ChatColor.GRAY + "Every few swings, the storm answers."
+                ChatColor.White + "Strikes lightning upon hit.",
+                ChatColor.White + "Every few swings, the storm answers."
         ));
 
         // NOTE: enchantment field names shown are for older Spigot/Paper APIs.
