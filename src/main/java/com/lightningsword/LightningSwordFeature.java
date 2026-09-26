@@ -111,6 +111,12 @@ public class LightningSwordFeature implements Listener, CommandExecutor {
         }
 
         Player player = (Player) sender;
+
+        if (!player.isOp()) {
+            player.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            return true;
+        }
+
         player.getInventory().addItem(createLightningSword());
         player.sendMessage(ChatColor.YELLOW + "You have been given the " + ChatColor.BOLD + "Lightning Sword" + ChatColor.YELLOW + "!");
         return true;
