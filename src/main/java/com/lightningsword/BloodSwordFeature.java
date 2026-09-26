@@ -42,7 +42,7 @@ public class BloodSwordFeature implements Listener, CommandExecutor {
     }
 
     public ItemStack createBloodSword() {
-        ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
+        ItemStack sword = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = sword.getItemMeta();
 
         meta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Blood Sword");
