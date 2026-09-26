@@ -7,3 +7,11 @@ commands:
     description: Gives you the Lightning Sword
     usage: /lightningsword
     aliases: [lsword]
+  icesword:
+    description: Gives you the Ice Sword
+    usage: /icesword
+    aliases: [isword]
+  bloodsword:
+    description: Gives you the Blood Sword
+    usage: /bloodsword
+    aliases: [bsword]
