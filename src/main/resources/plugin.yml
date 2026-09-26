@@ -15,3 +15,7 @@ commands:
     description: Gives you the Blood Sword
     usage: /bloodsword
     aliases: [bsword]
+  wardensword:
+    description: Gives you the Warden Sword
+    usage: /wardensword
+    aliases: [wsword]
