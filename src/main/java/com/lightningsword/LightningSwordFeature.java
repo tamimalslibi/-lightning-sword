@@ -4,11 +4,11 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -30,11 +30,12 @@ import java.util.UUID;
 
 /**
  * Lightning Sword feature.
- * - Gives a fully enchanted sword via /lightningsword
- * - Deals a bit of extra flat damage on top of the sword + enchant damage
- * - Every 2-3 hits with THIS specific sword, strikes exactly 1 (visual-only) lightning bolt on the target
- * - Shift + right-click: AoE ability that strikes lightning around the player and chips nearby
- *   entities for a small custom damage amount (NOT the game's real lightning damage), on a cooldown
+ * - Gives a fully enchanted netherite sword via /lightningsword, dealing normal sword damage (no melee bonus)
+ * - Passive: every fully-charged hit has a 15% chance to strike 1 (visual-only) lightning bolt on the target.
+ *   A hit only "counts" toward that roll if it lands at least MIN_HIT_INTERVAL_MS after the last counted hit,
+ *   so spam-clicking can't force extra procs.
+ * - Shift + right-click: AoE ability that strikes lightning around the player and deals decent
+ *   custom damage to nearby entities (NOT the game's real lightning damage), on a cooldown
  * - Uses a PersistentDataContainer tag so it never interferes with other custom swords (e.g. Dash Sword)
  */
 public class LightningSwordFeature implements Listener, CommandExecutor {
@@ -42,19 +43,18 @@ public class LightningSwordFeature implements Listener, CommandExecutor {
     private final JavaPlugin plugin;
     private final NamespacedKey swordKey;
 
-    // Tracks hits-since-last-strike per player
-    private final Map<UUID, Integer> hitCounts = new HashMap<>();
-    // Tracks the randomized threshold (2 or 3) per player, re-rolled after each strike
-    private final Map<UUID, Integer> hitThresholds = new HashMap<>();
+    // Tracks the last time (ms) each player's hit counted toward the passive's 15% roll
+    private final Map<UUID, Long> lastCountedHit = new HashMap<>();
     // Tracks the last time (ms) each player used the shift-right-click ability
     private final Map<UUID, Long> abilityCooldowns = new HashMap<>();
 
     private final Random random = new Random();
 
     // --- Tunable numbers, adjust to taste ---
-    private static final double EXTRA_MELEE_DAMAGE = 2.5;     // flat bonus on top of normal sword + enchant damage
+    private static final double PASSIVE_PROC_CHANCE = 0.15;   // 15% chance per counted hit to strike lightning
+    private static final long MIN_HIT_INTERVAL_MS = 600;      // hits faster than this (spam-click) don't count toward the roll
     private static final double ABILITY_RADIUS = 6.0;         // blocks around the player affected by the ability
-    private static final double ABILITY_DAMAGE = 12.0;         // 3.0 = 1.5 hearts of "a bit" of damage per bolt
+    private static final double ABILITY_DAMAGE = 16.0;        // decent damage per target hit by the storm ability
     private static final long ABILITY_COOLDOWN_MS = 15_000;   // 15 second cooldown on the ability
 
     public LightningSwordFeature(JavaPlugin plugin) {
@@ -70,8 +70,11 @@ public class LightningSwordFeature implements Listener, CommandExecutor {
 
         meta.setDisplayName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Lightning Sword");
         meta.setLore(List.of(
-                ChatColor.WHITE + "Strikes lightning upon hit.",
-                ChatColor.WHITE + "Every few swings, the storm answers."
+                ChatColor.GRAY + "Deals normal sword damage.",
+                ChatColor.GRAY + "Passive: 15% chance per solid hit to",
+                ChatColor.GRAY + "strike the target with lightning.",
+                ChatColor.GRAY + "Shift + right-click: call down a storm",
+                ChatColor.GRAY + "that deals decent damage nearby."
         ));
 
         // NOTE: enchantment field names shown are for older Spigot/Paper APIs.
@@ -113,7 +116,7 @@ public class LightningSwordFeature implements Listener, CommandExecutor {
         return true;
     }
 
-    // ---------- Hit tracking + lightning trigger ----------
+    // ---------- Passive: 15% chance on a "fully loaded" hit ----------
 
     @EventHandler
     public void onHit(EntityDamageByEntityEvent event) {
@@ -125,33 +128,27 @@ public class LightningSwordFeature implements Listener, CommandExecutor {
 
         if (!isLightningSword(weapon)) return; // not this sword -> ignore, no interference with other swords
 
-        // A bit of extra damage on top of the normal sword + enchant damage
-        event.setDamage(event.getDamage() + EXTRA_MELEE_DAMAGE);
+        // Base damage is left untouched here - sword hits for its normal (enchant-boosted) amount, nothing extra.
 
         UUID uuid = player.getUniqueId();
-        int count = hitCounts.getOrDefault(uuid, 0) + 1;
-        int threshold = hitThresholds.computeIfAbsent(uuid, k -> rollThreshold());
+        long now = System.currentTimeMillis();
+        long last = lastCountedHit.getOrDefault(uuid, 0L);
 
-        if (count >= threshold) {
+        // Hits faster than MIN_HIT_INTERVAL_MS (spam-clicking) don't count toward the roll at all
+        if (now - last < MIN_HIT_INTERVAL_MS) return;
+
+        lastCountedHit.put(uuid, now);
+
+        if (random.nextDouble() < PASSIVE_PROC_CHANCE) {
             LivingEntity target = (LivingEntity) event.getEntity();
             Location loc = target.getLocation();
 
-            // strikeLightningEffect = visual + sound only, does NOT deal extra damage
+            // strikeLightningEffect = visual + sound only, does NOT deal extra damage on top of the normal hit
             loc.getWorld().strikeLightningEffect(loc);
-
-            // reset counter and roll a new random threshold (2 or 3) for next time
-            hitCounts.put(uuid, 0);
-            hitThresholds.put(uuid, rollThreshold());
-        } else {
-            hitCounts.put(uuid, count);
         }
     }
 
-    private int rollThreshold() {
-        return 2 + random.nextInt(2); // 2 or 3
-    }
-
-    // ---------- Shift + right-click ability: AoE lightning, chip damage only ----------
+    // ---------- Shift + right-click ability: AoE lightning, decent damage ----------
 
     @EventHandler
     public void onAbilityTrigger(PlayerInteractEvent event) {
@@ -193,7 +190,7 @@ public class LightningSwordFeature implements Listener, CommandExecutor {
             // Visual/sound only — this does NOT deal Minecraft's normal lightning damage
             target.getWorld().strikeLightningEffect(loc);
 
-            // Apply our own small "a bit of damage" amount instead, attributed to the player
+            // Apply our own decent custom damage amount instead, attributed to the player
             target.damage(ABILITY_DAMAGE, player);
             struck++;
         }
