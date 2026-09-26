@@ -18,6 +18,10 @@ public class LightningSwordPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(bloodSword, this);
         getCommand("bloodsword").setExecutor(bloodSword);
 
+        WardenSwordFeature wardenSword = new WardenSwordFeature(this);
+        getServer().getPluginManager().registerEvents(wardenSword, this);
+        getCommand("wardensword").setExecutor(wardenSword);
+
         getLogger().info("Lightning Sword plugin enabled!");
     }
 }
