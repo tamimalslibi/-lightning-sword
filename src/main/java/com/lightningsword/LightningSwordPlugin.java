@@ -1,17 +1,23 @@
-name: LightningSword
-version: '1.0.0'
-main: com.lightningsword.LightningSwordPlugin
-api-version: '1.20'
-commands:
-  lightningsword:
-    description: Gives you the Lightning Sword
-    usage: /lightningsword
-    aliases: [lsword]
-  icesword:
-    description: Gives you the Ice Sword
-    usage: /icesword
-    aliases: [isword]
-  bloodsword:
-    description: Gives you the Blood Sword
-    usage: /bloodsword
-    aliases: [bsword]
+package com.lightningsword;
+
+import org.bukkit.plugin.java.JavaPlugin;
+
+public class LightningSwordPlugin extends JavaPlugin {
+
+    @Override
+    public void onEnable() {
+        LightningSwordFeature feature = new LightningSwordFeature(this);
+        getServer().getPluginManager().registerEvents(feature, this);
+        getCommand("lightningsword").setExecutor(feature);
+
+        IceSwordFeature iceSword = new IceSwordFeature(this);
+        getServer().getPluginManager().registerEvents(iceSword, this);
+        getCommand("icesword").setExecutor(iceSword);
+
+        BloodSwordFeature bloodSword = new BloodSwordFeature(this);
+        getServer().getPluginManager().registerEvents(bloodSword, this);
+        getCommand("bloodsword").setExecutor(bloodSword);
+
+        getLogger().info("Lightning Sword plugin enabled!");
+    }
+}
