@@ -25,35 +25,25 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
-/**
- * Ice Sword feature.
- * - Gives a fully enchanted sword via /icesword (OP only)
- * - Passive: 20% chance per hit to "freeze" the target (heavy Slowness for a few seconds)
- * - Uses its own PersistentDataContainer tag so it never interferes with Lightning Sword or Dash Sword
- */
 public class IceSwordFeature implements Listener, CommandExecutor {
 
     private final JavaPlugin plugin;
     private final NamespacedKey swordKey;
     private final Random random = new Random();
-    // Tracks the last time (ms) each player's hit counted toward the freeze roll
     private final Map<UUID, Long> lastCountedHit = new HashMap<>();
 
-    // --- Tunable numbers ---
-    private static final double FREEZE_CHANCE = 0.20;      // 20% chance to freeze on hit
-    private static final int FREEZE_DURATION_TICKS = 60;   // 3 seconds (20 ticks = 1 second)
-    private static final int FREEZE_AMPLIFIER = 4;         // Slowness V-ish, near-frozen
-    private static final long MIN_HIT_INTERVAL_MS = 600;   // hits faster than this (spam-click/high CPS) don't count toward the roll
+    private static final double FREEZE_CHANCE = 0.20;
+    private static final int FREEZE_DURATION_TICKS = 60;
+    private static final int FREEZE_AMPLIFIER = 4;
+    private static final long MIN_HIT_INTERVAL_MS = 600;
 
     public IceSwordFeature(JavaPlugin plugin) {
         this.plugin = plugin;
         this.swordKey = new NamespacedKey(plugin, "ice_sword");
     }
 
-    // ---------- Item creation ----------
-
     public ItemStack createIceSword() {
-        ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
+        ItemStack sword = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = sword.getItemMeta();
 
         meta.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "Ice Sword");
@@ -61,12 +51,10 @@ public class IceSwordFeature implements Listener, CommandExecutor {
                 ChatColor.AQUA + "Has a 20% chance to freeze enemies."
         ));
 
-        // NOTE: on 1.20.5+ (new enchantment registry) swap to Enchantment.SHARPNESS,
-        // Enchantment.FIRE_ASPECT, Enchantment.UNBREAKING, Enchantment.MENDING instead.
-        meta.addEnchant(Enchantment.DAMAGE_ALL, 5, true);   // Sharpness V
-        meta.addEnchant(Enchantment.FIRE_ASPECT, 1, true);  // Fire Aspect I
-        meta.addEnchant(Enchantment.DURABILITY, 3, true);   // Unbreaking III
-        meta.addEnchant(Enchantment.MENDING, 1, true);      // Mending
+        meta.addEnchant(Enchantment.DAMAGE_ALL, 5, true);
+        meta.addEnchant(Enchantment.FIRE_ASPECT, 1, true);
+        meta.addEnchant(Enchantment.DURABILITY, 3, true);
+        meta.addEnchant(Enchantment.MENDING, 1, true);
 
         meta.getPersistentDataContainer().set(swordKey, PersistentDataType.BYTE, (byte) 1);
 
@@ -79,8 +67,6 @@ public class IceSwordFeature implements Listener, CommandExecutor {
         ItemMeta meta = item.getItemMeta();
         return meta.getPersistentDataContainer().has(swordKey, PersistentDataType.BYTE);
     }
-
-    // ---------- Command: /icesword (OP only) ----------
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -103,8 +89,6 @@ public class IceSwordFeature implements Listener, CommandExecutor {
         return true;
     }
 
-    // ---------- Passive: 20% chance to freeze on hit ----------
-
     @EventHandler
     public void onHit(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player)) return;
@@ -113,13 +97,12 @@ public class IceSwordFeature implements Listener, CommandExecutor {
         Player player = (Player) event.getDamager();
         ItemStack weapon = player.getInventory().getItemInMainHand();
 
-        if (!isIceSword(weapon)) return; // not this sword -> ignore, no interference with other swords
+        if (!isIceSword(weapon)) return;
 
         UUID uuid = player.getUniqueId();
         long now = System.currentTimeMillis();
         long last = lastCountedHit.getOrDefault(uuid, 0L);
 
-        // Hits faster than MIN_HIT_INTERVAL_MS (spam-click / high CPS) don't count toward the roll
         if (now - last < MIN_HIT_INTERVAL_MS) return;
 
         lastCountedHit.put(uuid, now);
