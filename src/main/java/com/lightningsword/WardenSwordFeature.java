@@ -46,7 +46,7 @@ public class WardenSwordFeature implements Listener, CommandExecutor {
     private final Map<UUID, Long> abilityCooldowns = new HashMap<>();
 
     // --- Tunable numbers ---
-    private static final double SONIC_BOOM_DAMAGE = 10.0;       // 10.0 = 5.0 hearts
+    private static final double SONIC_BOOM_DAMAGE = 50.0;       // 50.0 = 25.0 hearts
     private static final double SONIC_BOOM_RANGE = 20.0;       // max distance the beam checks, in blocks
     private static final double SONIC_BOOM_CONE_DEGREES = 15;  // how narrow the "beam" is
     private static final long ABILITY_COOLDOWN_MS = 15_000;    // 15 second cooldown
